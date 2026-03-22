@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>V3RX Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+<style>
+  :root{--bg:#080808;--bg2:#111;--bg3:#1a1a1a;--mid:#2a2a2a;--gray:#555;--light:#999;--white:#f0ede8;--accent:#c8ff00;--red:#ff4444;--green:#44ff88;}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--white);font-family:'Syne',sans-serif;min-height:100vh;}
+
+  /* LOGIN */
+  .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .login-box{background:var(--bg2);border:1px solid var(--mid);padding:56px 48px;max-width:420px;width:100%;position:relative;overflow:hidden;}
+  .login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,transparent,var(--accent),transparent);}
+  .login-box h1{font-family:'Bebas Neue';font-size:2.5rem;letter-spacing:0.05em;margin-bottom:4px;}
+  .login-box p{font-family:'DM Mono';font-size:0.6rem;color:var(--gray);letter-spacing:0.15em;margin-bottom:32px;}
+  .form-group{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+  .form-group label{font-family:'DM Mono';font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gray);}
+  .form-group input{background:var(--bg3);border:1px solid var(--mid);color:var(--white);padding:14px 16px;font-family:'DM Mono';font-size:0.8rem;outline:none;transition:border-color 0.2s;width:100%;}
+  .form-group input:focus{border-color:var(--accent);}
+  .btn{font-family:'DM Mono';font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;padding:14px 24px;border:none;cursor:pointer;transition:all 0.2s;}
+  .btn-primary{background:var(--accent);color:var(--bg);width:100%;margin-top:8px;}
+  .btn-primary:hover{background:var(--white);}
+  .btn-sm{padding:8px 14px;font-size:0.6rem;}
+  .btn-ghost{background:transparent;color:var(--white);border:1px solid var(--mid);}
+  .btn-ghost:hover{border-color:var(--white);}
+  .btn-danger{background:var(--red);color:var(--white);}
+  .btn-success{background:var(--green);color:#000;}
+  .error-msg{font-family:'DM Mono';font-size:0.65rem;color:var(--red);letter-spacing:0.1em;margin-top:12px;display:none;}
+
+  /* ADMIN PANEL */
+  .admin-screen{display:none;}
+  .admin-nav{background:var(--bg2);border-bottom:1px solid var(--mid);padding:20px 40px;display:flex;justify-content:space-between;align-items:center;}
+  .admin-logo{font-family:'Bebas Neue';font-size:1.6rem;letter-spacing:0.1em;}
+  .admin-logo span{color:var(--accent);}
+  .admin-user{font-family:'DM Mono';font-size:0.6rem;color:var(--gray);letter-spacing:0.1em;}
+  .admin-main{padding:40px;}
+
+  /* STATS */
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-bottom:40px;}
+  .stat-card{background:var(--bg2);padding:28px 24px;border-bottom:2px solid transparent;transition:border-color 0.2s;}
+  .stat-card:hover{border-color:var(--accent);}
+  .stat-label{font-family:'DM Mono';font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gray);margin-bottom:12px;}
+  .stat-value{font-family:'Bebas Neue';font-size:2.5rem;letter-spacing:0.02em;color:var(--accent);}
+  .stat-sub{font-family:'DM Mono';font-size:0.6rem;color:var(--gray);letter-spacing:0.1em;margin-top:6px;}
+
+  /* TABS */
+  .tabs{display:flex;gap:2px;margin-bottom:32px;}
+  .tab{font-family:'DM Mono';font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;padding:12px 20px;background:var(--bg2);color:var(--gray);cursor:pointer;border:none;transition:all 0.2s;border-bottom:2px solid transparent;}
+  .tab.active{color:var(--accent);border-color:var(--accent);}
+  .tab:hover{color:var(--white);}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+
+  /* TABLE */
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;}
+  th{font-family:'DM Mono';font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gray);padding:12px 16px;text-align:left;border-bottom:1px solid var(--mid);}
+  td{font-family:'DM Mono';font-size:0.65rem;padding:14px 16px;border-bottom:1px solid var(--mid);vertical-align:middle;color:var(--light);}
+  tr:hover td{background:var(--bg2);}
+  .status-pill{display:inline-block;padding:4px 10px;font-family:'DM Mono';font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;border-radius:2px;}
+  .status-pending{background:rgba(255,200,0,0.15);color:#ffc800;}
+  .status-confirmed{background:rgba(68,255,136,0.15);color:var(--green);}
+  .status-shipped{background:rgba(0,150,255,0.15);color:#0096ff;}
+  .status-delivered{background:rgba(200,255,0,0.15);color:var(--accent);}
+  .status-processing{background:rgba(200,100,255,0.15);color:#c864ff;}
+  .status-cancelled{background:rgba(255,68,68,0.15);color:var(--red);}
+
+  /* INVENTORY */
+  .inventory-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}
+  .inv-card{background:var(--bg2);padding:24px;}
+  .inv-name{font-family:'Bebas Neue';font-size:1.2rem;letter-spacing:0.05em;margin-bottom:8px;}
+  .inv-price{font-family:'DM Mono';font-size:0.7rem;color:var(--accent);margin-bottom:16px;}
+  .inv-stock{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+  .inv-stock label{font-family:'DM Mono';font-size:0.6rem;letter-spacing:0.1em;color:var(--gray);min-width:60px;}
+  .inv-stock input{background:var(--bg3);border:1px solid var(--mid);color:var(--white);padding:6px 10px;font-family:'DM Mono';font-size:0.7rem;outline:none;width:70px;text-align:center;}
+  .inv-stock input:focus{border-color:var(--accent);}
+  .inv-save{margin-top:12px;}
+
+  /* ORDER DETAIL MODAL */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:none;align-items:center;justify-content:center;padding:24px;}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--bg2);border:1px solid var(--mid);padding:40px;max-width:580px;width:100%;max-height:85vh;overflow-y:auto;position:relative;}
+  .modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,transparent,var(--accent),transparent);}
+  .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--gray);cursor:pointer;font-size:1.2rem;}
+  .modal-title{font-family:'Bebas Neue';font-size:2rem;letter-spacing:0.05em;margin-bottom:24px;}
+  .detail-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--mid);font-family:'DM Mono';font-size:0.65rem;}
+  .detail-row:last-child{border-bottom:none;}
+  .detail-row span:first-child{color:var(--gray);}
+  .status-select{background:var(--bg3);border:1px solid var(--mid);color:var(--white);padding:10px 14px;font-family:'DM Mono';font-size:0.7rem;outline:none;margin-top:16px;width:100%;}
+  .tracking-input{background:var(--bg3);border:1px solid var(--mid);color:var(--white);padding:10px 14px;font-family:'DM Mono';font-size:0.7rem;outline:none;margin-top:12px;width:100%;}
+  .tracking-input::placeholder{color:var(--gray);}
+  .modal-actions{display:flex;gap:12px;margin-top:20px;}
+
+  .search-bar{background:var(--bg2);border:1px solid var(--mid);color:var(--white);padding:12px 16px;font-family:'DM Mono';font-size:0.7rem;outline:none;width:300px;margin-bottom:20px;}
+  .search-bar:focus{border-color:var(--accent);}
+  .search-bar::placeholder{color:var(--gray);}
+
+  .loader{display:inline-block;width:14px;height:14px;border:2px solid var(--mid);border-top-color:var(--accent);border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--accent);padding:14px 20px;font-family:'DM Mono';font-size:0.65rem;letter-spacing:0.1em;color:var(--accent);transform:translateY(80px);transition:transform 0.3s;z-index:300;}
+  .toast.show{transform:translateY(0);}
+
+  @media(max-width:900px){.stats-grid{grid-template-columns:1fr 1fr;}.inventory-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h1>V3RX Admin</h1>
+    <p>// Restricted access — authorized personnel only</p>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="isaactressler09@gmail.com" onkeydown="if(event.key==='Enter')login()"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"/>
+    </div>
+    <button class="btn btn-primary" onclick="login()" id="loginBtn">Access Panel →</button>
+    <div class="error-msg" id="loginError">Invalid credentials. Access denied.</div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin-screen" id="adminScreen">
+  <div class="admin-nav">
+    <div class="admin-logo">V3<span>RX</span> <span style="font-size:0.9rem;color:var(--gray);font-family:'DM Mono';letter-spacing:0.1em;">Admin</span></div>
+    <div style="display:flex;gap:16px;align-items:center;">
+      <span class="admin-user" id="adminUserLabel"></span>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="admin-main">
+    <!-- STATS -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="statOrders">—</div><div class="stat-sub">All time</div></div>
+      <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="statPending">—</div><div class="stat-sub">Awaiting verification</div></div>
+      <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-value" id="statRevenue">—</div><div class="stat-sub">Total collected</div></div>
+      <div class="stat-card"><div class="stat-label">Shipped</div><div class="stat-value" id="statShipped">—</div><div class="stat-sub">In transit</div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('orders')">Orders</button>
+      <button class="tab" onclick="switchTab('inventory')">Inventory</button>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div class="tab-content active" id="tab-orders">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <input class="search-bar" type="text" placeholder="Search by Order ID, name, email..." oninput="filterOrders(this.value)"/>
+        <button class="btn btn-ghost btn-sm" onclick="loadOrders()">↻ Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Item</th>
+              <th>Size</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTable"><tr><td colspan="8" style="text-align:center;color:var(--gray);padding:32px;"><span class="loader"></span></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- INVENTORY TAB -->
+    <div class="tab-content" id="tab-inventory">
+      <div class="inventory-grid" id="inventoryGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--gray);font-family:'DM Mono';font-size:0.7rem;"><span class="loader"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+const ADMIN_EMAIL = 'isaactressler09@gmail.com';
+let authToken = localStorage.getItem('v3rx_admin_token');
+let allOrders = [];
+
+const PRODUCTS = [
+  { id:'p1', name:'Void Oversized Tee', price:58, sizes:['XS','S','M','L','XL','XXL'] },
+  { id:'p2', name:'Arc Hoodie', price:120, sizes:['S','M','L','XL','XXL'] },
+  { id:'p3', name:'Phantom Track Pant', price:95, sizes:['S','M','L','XL'] },
+  { id:'p4', name:'Signal Longsleeve', price:72, sizes:['XS','S','M','L','XL','XXL'] },
+  { id:'p5', name:'Recon Cap', price:42, sizes:['ONE SIZE'] },
+  { id:'p6', name:'Stealth Cargo', price:110, sizes:['S','M','L','XL'] },
+];
+
+async function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
+  if (!email || !pass) return;
+  const btn = document.getElementById('loginBtn');
+  btn.innerHTML = '<span class="loader"></span>';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/api/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+    if (data.success) {
+      authToken = data.token;
+      localStorage.setItem('v3rx_admin_token', authToken);
+      showAdmin(email);
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+    }
+  } catch(e) {
+    document.getElementById('loginError').style.display = 'block';
+  }
+  btn.innerHTML = 'Access Panel →';
+  btn.disabled = false;
+}
+
+function showAdmin(email) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminScreen').style.display = 'block';
+  document.getElementById('adminUserLabel').textContent = email;
+  loadOrders();
+  loadInventory();
+}
+
+function logout() {
+  localStorage.removeItem('v3rx_admin_token');
+  location.reload();
+}
+
+async function loadOrders() {
+  try {
+    const res = await fetch(`${API}/api/admin/orders`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    const data = await res.json();
+    allOrders = data.orders || [];
+    renderOrders(allOrders);
+    updateStats(allOrders);
+  } catch(e) {
+    showToast('Failed to load orders');
+  }
+}
+
+function updateStats(orders) {
+  document.getElementById('statOrders').textContent = orders.length;
+  document.getElementById('statPending').textContent = orders.filter(o => o.status === 'pending').length;
+  document.getElementById('statRevenue').textContent = '$' + orders.reduce((s, o) => s + (o.price || 0), 0);
+  document.getElementById('statShipped').textContent = orders.filter(o => o.status === 'shipped').length;
+}
+
+function renderOrders(orders) {
+  const tb = document.getElementById('ordersTable');
+  if (!orders.length) {
+    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:32px;font-family:DM Mono;font-size:0.65rem;">No orders yet.</td></tr>';
+    return;
+  }
+  tb.innerHTML = orders.map(o => `
+    <tr>
+      <td style="color:var(--accent);font-size:0.6rem;">${o.orderId}</td>
+      <td>${o.customer?.firstName || ''} ${o.customer?.lastName || ''}</td>
+      <td>${o.productName}</td>
+      <td>${o.size}</td>
+      <td style="color:var(--accent);">$${o.price}</td>
+      <td><span class="status-pill status-${o.status}">${o.status}</span></td>
+      <td style="color:var(--gray);font-size:0.6rem;">${new Date(o.createdAt).toLocaleDateString()}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick='openOrder(${JSON.stringify(o)})'>View</button></td>
+    </tr>
+  `).join('');
+}
+
+function filterOrders(q) {
+  const filtered = allOrders.filter(o =>
+    o.orderId?.toLowerCase().includes(q.toLowerCase()) ||
+    o.customer?.firstName?.toLowerCase().includes(q.toLowerCase()) ||
+    o.customer?.email?.toLowerCase().includes(q.toLowerCase())
+  );
+  renderOrders(filtered);
+}
+
+function openOrder(o) {
+  document.getElementById('modalBg').classList.add('open');
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-title">${o.orderId}</div>
+    <div class="detail-row"><span>Customer</span><span>${o.customer?.firstName} ${o.customer?.lastName}</span></div>
+    <div class="detail-row"><span>Email</span><span>${o.customer?.email}</span></div>
+    <div class="detail-row"><span>Phone</span><span>${o.customer?.phone || '—'}</span></div>
+    <div class="detail-row"><span>Address</span><span>${o.customer?.address1}${o.customer?.address2 ? ', ' + o.customer.address2 : ''}</span></div>
+    <div class="detail-row"><span>City / State</span><span>${o.customer?.city}, ${o.customer?.state} ${o.customer?.zip}</span></div>
+    <div class="detail-row"><span>Country</span><span>${o.customer?.country}</span></div>
+    <div class="detail-row"><span>Item</span><span>${o.productName}</span></div>
+    <div class="detail-row"><span>Size</span><span>${o.size}</span></div>
+    <div class="detail-row"><span>Price</span><span style="color:var(--accent)">$${o.price}</span></div>
+    <div class="detail-row"><span>Placed</span><span>${new Date(o.createdAt).toLocaleString()}</span></div>
+    <div style="margin-top:20px;">
+      <div style="font-family:'DM Mono';font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gray);margin-bottom:8px;">Update Status</div>
+      <select class="status-select" id="modalStatus">
+        ${['pending','confirmed','processing','shipped','delivered','cancelled'].map(s =>
+          `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`
+        ).join('')}
+      </select>
+      <input class="tracking-input" type="text" id="modalTracking" placeholder="Tracking number (optional)" value="${o.trackingNumber || ''}"/>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-sm" onclick="updateOrder('${o.orderId}')">Save Changes</button>
+        <button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.orderId}')">Cancel Order</button>
+      </div>
+    </div>
+  `;
+}
+
+function closeModal() {
+  document.getElementById('modalBg').classList.remove('open');
+}
+
+async function updateOrder(orderId) {
+  const status = document.getElementById('modalStatus').value;
+  const trackingNumber = document.getElementById('modalTracking').value.trim();
+  try {
+    const res = await fetch(`${API}/api/admin/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ status, trackingNumber })
+    });
+    const data = await res.json();
+    if (data.success) { showToast('Order updated!'); closeModal(); loadOrders(); }
+    else showToast('Update failed');
+  } catch(e) { showToast('Error updating order'); }
+}
+
+async function cancelOrder(orderId) {
+  if (!confirm('Cancel this order?')) return;
+  await updateOrder(orderId);
+}
+
+async function loadInventory() {
+  try {
+    const res = await fetch(`${API}/api/admin/inventory`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    const data = await res.json();
+    renderInventory(data.inventory || {});
+  } catch(e) {
+    renderInventory({});
+  }
+}
+
+function renderInventory(inv) {
+  document.getElementById('inventoryGrid').innerHTML = PRODUCTS.map(p => `
+    <div class="inv-card">
+      <div class="inv-name">${p.name}</div>
+      <div class="inv-price">$${p.price}</div>
+      ${p.sizes.map(s => `
+        <div class="inv-stock">
+          <label>${s}</label>
+          <input type="number" min="0" value="${(inv[p.id] && inv[p.id][s]) || 0}" id="inv_${p.id}_${s}"/>
+        </div>
+      `).join('')}
+      <div class="inv-save">
+        <button class="btn btn-ghost btn-sm" onclick="saveInventory('${p.id}', ${JSON.stringify(p.sizes)})">Save</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function saveInventory(productId, sizes) {
+  const stock = {};
+  sizes.forEach(s => {
+    stock[s] = parseInt(document.getElementById(`inv_${productId}_${s}`).value) || 0;
+  });
+  try {
+    const res = await fetch(`${API}/api/admin/inventory`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ productId, stock })
+    });
+    const data = await res.json();
+    if (data.success) showToast('Inventory saved!');
+    else showToast('Failed to save');
+  } catch(e) { showToast('Error saving inventory'); }
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Auto-login if token exists
+if (authToken) showAdmin(ADMIN_EMAIL);
+</script>
+</body>
+</html>
