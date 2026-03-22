@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>V3RX — Shop</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #141414;
+    --bg3: #1e1e1e;
+    --mid: #2e2e2e;
+    --gray: #555;
+    --light: #999;
+    --off-white: #ddd;
+    --white: #f5f5f5;
+    --accent: #e0e0e0;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Cormorant Garamond', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRADIENT BG */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 15% 0%, #272727 0%, transparent 55%),
+      radial-gradient(ellipse 60% 50% at 85% 100%, #1e1e1e 0%, transparent 50%),
+      radial-gradient(ellipse 100% 80% at 50% 50%, #111 0%, #0a0a0a 100%);
+    z-index: -2; pointer-events: none;
+  }
+  /* GRAIN */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    background-size: 180px;
+    pointer-events: none; z-index: -1; opacity: 0.5;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 24px 48px;
+    background: linear-gradient(to bottom, rgba(10,10,10,0.98), transparent);
+  }
+  .nav-logo {
+    font-family: 'Bebas Neue'; font-size: 1.8rem; letter-spacing: 0.12em;
+    background: linear-gradient(to right, #fff, #888);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a {
+    font-family: 'DM Mono'; font-size: 0.62rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--gray); text-decoration: none; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--off-white); }
+
+  /* PAGE WRAPPER — centered */
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 130px 24px 100px;
+    position: relative; z-index: 1;
+  }
+
+  /* HERO */
+  .hero-label {
+    font-family: 'DM Mono'; font-size: 0.65rem; letter-spacing: 0.3em;
+    text-transform: uppercase; color: var(--gray); margin-bottom: 16px;
+    opacity: 0; animation: fadeUp 0.7s 0.2s forwards;
+  }
+  .hero-title {
+    font-family: 'Bebas Neue'; font-size: clamp(4.5rem, 12vw, 9rem);
+    line-height: 0.88; letter-spacing: 0.02em;
+    background: linear-gradient(160deg, #fff 0%, #aaa 40%, #444 80%, #1a1a1a 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    opacity: 0; animation: fadeUp 0.8s 0.35s forwards;
+  }
+  .hero-sub {
+    font-family: 'Cormorant Garamond'; font-style: italic; font-size: 1.2rem;
+    color: var(--gray); margin-top: 20px; line-height: 1.6;
+    opacity: 0; animation: fadeUp 0.8s 0.5s forwards;
+  }
+  .hero-divider {
+    width: 60px; height: 1px;
+    background: linear-gradient(to right, var(--mid), transparent);
+    margin: 40px 0;
+    opacity: 0; animation: fadeUp 0.8s 0.65s forwards;
+  }
+
+  /* STEP INDICATOR */
+  .step-indicator {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 48px;
+    opacity: 0; animation: fadeUp 0.7s 0.8s forwards;
+  }
+  .step-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--mid); transition: background 0.4s, transform 0.4s;
+  }
+  .step-dot.active { background: var(--off-white); transform: scale(1.3); }
+  .step-dot.done { background: var(--gray); }
+  .step-line { width: 40px; height: 1px; background: var(--mid); }
+
+  /* STEPS */
+  .step { display: none; }
+  .step.active { display: block; animation: fadeUp 0.5s ease forwards; }
+
+  /* SECTION TITLES */
+  .section-eyebrow {
+    font-family: 'DM Mono'; font-size: 0.6rem; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--gray); margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue'; font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: 0.03em; line-height: 1;
+    background: linear-gradient(to right, #fff 0%, #666 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 36px;
+  }
+
+  /* PRODUCTS */
+  .products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+  .product-card {
+    background: var(--bg2); cursor: pointer;
+    border: 1px solid transparent; transition: border-color 0.25s, background 0.25s;
+    position: relative; overflow: hidden;
+  }
+  .product-card:hover { background: var(--bg3); border-color: var(--mid); }
+  .product-card.selected { border-color: var(--off-white) !important; }
+  .product-card.selected::after {
+    content: '✓'; position: absolute; top: 12px; right: 12px;
+    background: var(--off-white); color: var(--bg);
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: bold; font-family: 'DM Mono';
+  }
+  .product-img {
+    width: 100%; aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue'; font-size: 3.5rem;
+    color: rgba(255,255,255,0.04); position: relative; overflow: hidden;
+  }
+  .product-badge {
+    position: absolute; top: 12px; left: 12px;
+    font-family: 'DM Mono'; font-size: 0.52rem; letter-spacing: 0.15em;
+    text-transform: uppercase; padding: 5px 9px;
+    background: var(--off-white); color: var(--bg);
+  }
+  .product-info { padding: 18px 20px; border-top: 1px solid var(--mid); }
+  .product-name { font-family: 'Bebas Neue'; font-size: 1.25rem; letter-spacing: 0.05em; color: var(--off-white); }
+  .product-type { font-family: 'DM Mono'; font-size: 0.58rem; color: var(--gray); letter-spacing: 0.1em; margin-top: 4px; }
+  .product-price {
+    font-family: 'Bebas Neue'; font-size: 1.5rem; letter-spacing: 0.05em;
+    background: linear-gradient(to bottom, #fff, #888);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-top: 10px;
+  }
+  .product-sizes { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
+  .size-btn {
+    font-family: 'DM Mono'; font-size: 0.58rem; letter-spacing: 0.1em;
+    padding: 5px 9px; border: 1px solid var(--mid); background: transparent;
+    color: var(--gray); cursor: pointer; transition: all 0.2s;
+  }
+  .size-btn:hover { border-color: var(--gray); color: var(--off-white); }
+  .size-btn.selected { border-color: var(--off-white); color: var(--off-white); background: rgba(255,255,255,0.05); }
+
+  /* CART BAR */
+  .cart-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+    background: var(--bg2); border-top: 1px solid var(--mid);
+    padding: 16px 48px; display: flex; justify-content: space-between; align-items: center;
+    transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.23,1,0.32,1);
+  }
+  .cart-bar.visible { transform: translateY(0); }
+  .cart-info { font-family: 'DM Mono'; font-size: 0.68rem; color: var(--gray); letter-spacing: 0.1em; }
+  .cart-info strong { color: var(--off-white); }
+
+  /* FORM */
+  .form-wrap { max-width: 560px; margin: 0 auto; }
+  .order-summary {
+    background: var(--bg2); border: 1px solid var(--mid); padding: 22px 24px; margin-bottom: 32px;
+    position: relative; overflow: hidden;
+  }
+  .order-summary::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(to right, transparent, var(--mid), transparent); }
+  .summary-title { font-family: 'DM Mono'; font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray); margin-bottom: 14px; }
+  .summary-row { display: flex; justify-content: space-between; font-family: 'DM Mono'; font-size: 0.65rem; padding: 7px 0; border-bottom: 1px solid var(--mid); }
+  .summary-row:last-child { border-bottom: none; color: var(--off-white); }
+  .summary-row span:first-child { color: var(--gray); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+  .form-group label { font-family: 'DM Mono'; font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray); }
+  .form-group input, .form-group select {
+    background: var(--bg2); border: 1px solid var(--mid);
+    color: var(--white); padding: 13px 14px;
+    font-family: 'DM Mono'; font-size: 0.72rem; outline: none;
+    transition: border-color 0.2s; width: 100%;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--off-white); }
+  .form-group input::placeholder { color: var(--gray); }
+  .form-group select option { background: var(--bg2); }
+  .field-error { font-family: 'DM Mono'; font-size: 0.6rem; color: #ff5555; letter-spacing: 0.1em; margin-top: 4px; display: none; }
+  .field-error.show { display: block; }
+
+  /* VERIFICATION */
+  .verify-card {
+    background: var(--bg2); border: 1px solid var(--mid);
+    padding: 52px 48px; text-align: center; max-width: 480px; margin: 0 auto;
+    position: relative; overflow: hidden;
+  }
+  .verify-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(to right, transparent, var(--off-white), transparent); }
+  .verify-icon { font-size: 2.8rem; margin-bottom: 20px; }
+  .verify-card h2 { font-family: 'Bebas Neue'; font-size: 2.5rem; letter-spacing: 0.05em; margin-bottom: 12px; }
+  .verify-card p { font-family: 'DM Mono'; font-size: 0.65rem; color: var(--gray); letter-spacing: 0.1em; line-height: 1.8; }
+  .email-highlight { color: var(--off-white); font-family: 'Bebas Neue'; font-size: 1.1rem; letter-spacing: 0.05em; display: block; margin: 4px 0 12px; }
+  .code-inputs { display: flex; gap: 8px; justify-content: center; margin: 28px 0 8px; }
+  .code-digit {
+    width: 48px; height: 60px; background: var(--bg3); border: 1px solid var(--mid);
+    color: var(--white); font-family: 'Bebas Neue'; font-size: 2rem; letter-spacing: 0.05em;
+    text-align: center; outline: none; transition: border-color 0.2s;
+  }
+  .code-digit:focus { border-color: var(--off-white); background: var(--bg2); }
+  .code-error { font-family: 'DM Mono'; font-size: 0.62rem; color: #ff5555; letter-spacing: 0.1em; display: none; margin-top: 8px; }
+  .code-error.show { display: block; }
+  .resend-link { font-family: 'DM Mono'; font-size: 0.6rem; color: var(--gray); letter-spacing: 0.1em; margin-top: 16px; cursor: pointer; text-decoration: underline; background: none; border: none; }
+  .resend-link:hover { color: var(--off-white); }
+
+  /* PAYMENT */
+  .payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-bottom: 24px; }
+  .payment-card {
+    background: var(--bg2); padding: 26px 22px;
+    display: flex; align-items: center; gap: 14px;
+    text-decoration: none; color: var(--white);
+    border: 1px solid transparent; transition: all 0.2s;
+    position: relative;
+  }
+  .payment-card:hover { border-color: var(--mid); background: var(--bg3); }
+  .payment-card::after { content: '↗'; position: absolute; top: 14px; right: 14px; font-size: 0.75rem; color: var(--gray); transition: color 0.2s, transform 0.2s; }
+  .payment-card:hover::after { color: var(--off-white); transform: translate(2px,-2px); }
+  .pay-icon { font-size: 1.8rem; flex-shrink: 0; }
+  .pay-name { font-family: 'Bebas Neue'; font-size: 1.3rem; letter-spacing: 0.05em; }
+  .pay-handle { font-family: 'DM Mono'; font-size: 0.58rem; color: var(--gray); letter-spacing: 0.1em; margin-top: 3px; }
+  .pay-amount { font-family: 'Bebas Neue'; font-size: 1rem; background: linear-gradient(to bottom,#fff,#888); -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; margin-top:4px; }
+  .payment-note {
+    background: var(--bg2); border-left: 2px solid var(--off-white);
+    padding: 18px 20px; font-family: 'DM Mono'; font-size: 0.62rem;
+    color: var(--gray); letter-spacing: 0.08em; line-height: 1.8; margin-bottom: 24px;
+  }
+  .payment-note strong { color: var(--off-white); display: block; margin-bottom: 6px; }
+
+  /* CONFIRMATION */
+  .confirm-box { max-width: 520px; margin: 0 auto; text-align: center; }
+  .confirm-icon { font-size: 3.5rem; margin-bottom: 24px; }
+  .confirm-box h2 { font-family: 'Bebas Neue'; font-size: 3.5rem; letter-spacing: 0.05em; margin-bottom: 16px; background: linear-gradient(to right,#fff,#888); -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+  .confirm-box p { font-family: 'DM Mono'; font-size: 0.65rem; color: var(--gray); letter-spacing: 0.1em; line-height: 1.9; margin-bottom: 10px; }
+  .order-id-card {
+    background: var(--bg2); border: 1px solid var(--mid);
+    padding: 22px 24px; margin: 28px 0;
+    display: flex; justify-content: space-between; align-items: center;
+    position: relative; overflow: hidden;
+  }
+  .order-id-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(to right, transparent, var(--off-white), transparent); }
+  .oid-label { font-family: 'DM Mono'; font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray); margin-bottom: 6px; }
+  .oid-val { font-family: 'Bebas Neue'; font-size: 1.4rem; letter-spacing: 0.1em; color: var(--off-white); }
+
+  /* TRUST */
+  .trust-row { display: flex; gap: 24px; margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--mid); flex-wrap: wrap; justify-content: center; }
+  .trust-item { display: flex; align-items: center; gap: 10px; }
+  .trust-icon { font-size: 1.1rem; }
+  .trust-text { font-family: 'DM Mono'; font-size: 0.58rem; letter-spacing: 0.08em; color: var(--gray); line-height: 1.5; }
+  .trust-text strong { color: var(--light); display: block; }
+
+  /* BUTTONS */
+  .btn { font-family: 'DM Mono'; font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 14px 28px; border: none; cursor: pointer; transition: all 0.2s; display: inline-block; text-decoration: none; }
+  .btn-primary { background: var(--off-white); color: var(--bg); }
+  .btn-primary:hover { background: var(--white); }
+  .btn-ghost { background: transparent; color: var(--off-white); border: 1px solid var(--mid); }
+  .btn-ghost:hover { border-color: var(--off-white); }
+  .btn-full { width: 100%; text-align: center; }
+  .btn-row { display: flex; gap: 10px; margin-top: 28px; }
+
+  /* LOADER */
+  .loader { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--mid); border-top-color: var(--off-white); border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 80px; right: 24px; z-index: 300; background: var(--bg2); border: 1px solid var(--mid); padding: 14px 20px; font-family: 'DM Mono'; font-size: 0.65rem; letter-spacing: 0.1em; color: var(--off-white); transform: translateX(120%); transition: transform 0.3s; }
+  .toast.show { transform: translateX(0); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* REVEAL */
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s, transform 0.6s; }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  @media (max-width: 700px) {
+    nav { padding: 20px 20px; }
+    .page { padding: 110px 16px 100px; }
+    .products-grid { grid-template-columns: 1fr 1fr; }
+    .payment-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .cart-bar { padding: 14px 20px; }
+    .verify-card { padding: 36px 24px; }
+  }
+  @media (max-width: 480px) {
+    .products-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">V3RX</a>
+  <ul class="nav-links">
+    <li><a href="#">Shop</a></li>
+    <li><a href="/track.html">Track Order</a></li>
+    <li><a href="https://www.tiktok.com/@da.real.v3rx" target="_blank">TikTok</a></li>
+  </ul>
+</nav>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div id="heroSection">
+    <p class="hero-label">// Official Store — Season 01</p>
+    <h1 class="hero-title">V3RX<br>Shop</h1>
+    <p class="hero-sub">Limited drops. No reruns. Shipped directly to you.</p>
+    <div class="hero-divider"></div>
+  </div>
+
+  <!-- STEP INDICATOR -->
+  <div class="step-indicator">
+    <div class="step-dot active" id="dot1"></div>
+    <div class="step-line"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-line"></div>
+    <div class="step-dot" id="dot3"></div>
+    <div class="step-line"></div>
+    <div class="step-dot" id="dot4"></div>
+    <div class="step-line"></div>
+    <div class="step-dot" id="dot5"></div>
+  </div>
+
+  <!-- STEP 1: PRODUCTS -->
+  <div class="step active" id="step1">
+    <p class="section-eyebrow">// Step 1 of 4</p>
+    <h2 class="section-title">Select Your Item</h2>
+    <div class="products-grid" id="productsGrid"></div>
+    <div class="trust-row">
+      <div class="trust-item"><span class="trust-icon">🔒</span><div class="trust-text"><strong>Secure</strong>Verified checkout</div></div>
+      <div class="trust-item"><span class="trust-icon">📦</span><div class="trust-text"><strong>Direct Ship</strong>To your door</div></div>
+      <div class="trust-item"><span class="trust-icon">✉️</span><div class="trust-text"><strong>Confirmed</strong>Email receipt</div></div>
+      <div class="trust-item"><span class="trust-icon">🎨</span><div class="trust-text"><strong>Exclusive</strong>V3RX originals</div></div>
+    </div>
+  </div>
+
+  <!-- STEP 2: ADDRESS -->
+  <div class="step" id="step2">
+    <p class="section-eyebrow">// Step 2 of 4</p>
+    <h2 class="section-title">Your Details</h2>
+    <div class="form-wrap">
+      <div id="summaryStep2"></div>
+      <div class="form-row">
+        <div class="form-group"><label>First Name *</label><input type="text" id="firstName" placeholder="John"/></div>
+        <div class="form-group"><label>Last Name *</label><input type="text" id="lastName" placeholder="Doe"/></div>
+      </div>
+      <div class="form-group">
+        <label>Email Address *</label>
+        <input type="email" id="emailInput" placeholder="you@email.com"/>
+        <span class="field-error" id="emailError">Please enter a valid email.</span>
+      </div>
+      <div class="form-group"><label>Phone (optional)</label><input type="tel" id="phoneInput" placeholder="+1 (555) 000-0000"/></div>
+      <div class="form-group">
+        <label>Street Address *</label>
+        <input type="text" id="address1" placeholder="123 Main St"/>
+      </div>
+      <div class="form-group"><label>Apt / Suite (optional)</label><input type="text" id="address2" placeholder="Apt 4B"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>City *</label><input type="text" id="city" placeholder="New York"/></div>
+        <div class="form-group"><label>State *</label><input type="text" id="state" placeholder="NY"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>ZIP Code *</label><input type="text" id="zip" placeholder="10001"/></div>
+        <div class="form-group">
+          <label>Country</label>
+          <select id="country">
+            <option value="US">United States</option>
+            <option value="CA">Canada</option>
+            <option value="GB">United Kingdom</option>
+            <option value="AU">Australia</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="goToStep(1)">← Back</button>
+        <button class="btn btn-primary" onclick="submitAddress()" id="sendCodeBtn">Send Verification Code →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: VERIFY -->
+  <div class="step" id="step3">
+    <p class="section-eyebrow">// Step 3 of 4</p>
+    <h2 class="section-title">Verify Email</h2>
+    <div class="verify-card">
+      <div class="verify-icon">📬</div>
+      <h2>Check Your Inbox</h2>
+      <p>We sent a 6-digit code to<span class="email-highlight" id="emailDisplay"></span>Enter it below to unlock payment options.</p>
+      <div class="code-inputs">
+        <input class="code-digit" type="text" maxlength="1" id="d0" oninput="digitInput(this,0)" onkeydown="digitBack(event,0)"/>
+        <input class="code-digit" type="text" maxlength="1" id="d1" oninput="digitInput(this,1)" onkeydown="digitBack(event,1)"/>
+        <input class="code-digit" type="text" maxlength="1" id="d2" oninput="digitInput(this,2)" onkeydown="digitBack(event,2)"/>
+        <input class="code-digit" type="text" maxlength="1" id="d3" oninput="digitInput(this,3)" onkeydown="digitBack(event,3)"/>
+        <input class="code-digit" type="text" maxlength="1" id="d4" oninput="digitInput(this,4)" onkeydown="digitBack(event,4)"/>
+        <input class="code-digit" type="text" maxlength="1" id="d5" oninput="digitInput(this,5)" onkeydown="digitBack(event,5)"/>
+      </div>
+      <div class="code-error" id="codeError">Incorrect code. Please try again.</div>
+      <button class="btn btn-primary btn-full" onclick="verifyCode()" id="verifyBtn" style="margin-top:20px;">Verify →</button>
+      <div style="margin-top:16px;">
+        <button class="resend-link" onclick="resendCode()">Didn't get it? Resend code</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: PAYMENT -->
+  <div class="step" id="step4">
+    <p class="section-eyebrow">// Step 4 of 4</p>
+    <h2 class="section-title">Choose Payment</h2>
+    <div id="summaryStep4"></div>
+    <div class="payment-note">
+      <strong>⚠️ Before You Pay</strong>
+      Send the <strong style="color:var(--off-white);display:inline;">exact amount</strong> and include your <strong style="color:var(--off-white);display:inline;">Order ID</strong> in the note/memo field. This helps us match your payment to your order instantly.
+    </div>
+    <div class="payment-grid">
+      <a href="YOUR_CASHAPP_LINK" target="_blank" class="payment-card">
+        <span class="pay-icon">💚</span>
+        <div><div class="pay-name">Cash App</div><div class="pay-handle">$YOURHANDLE</div><div class="pay-amount" id="pamt1"></div></div>
+      </a>
+      <a href="YOUR_PAYPAL_LINK" target="_blank" class="payment-card">
+        <span class="pay-icon">🔵</span>
+        <div><div class="pay-name">PayPal</div><div class="pay-handle">paypal.me/YOURHANDLE</div><div class="pay-amount" id="pamt2"></div></div>
+      </a>
+      <a href="YOUR_VENMO_LINK" target="_blank" class="payment-card">
+        <span class="pay-icon">💙</span>
+        <div><div class="pay-name">Venmo</div><div class="pay-handle">@YOURHANDLE</div><div class="pay-amount" id="pamt3"></div></div>
+      </a>
+      <a href="YOUR_ZELLE_INFO" target="_blank" class="payment-card">
+        <span class="pay-icon">🟣</span>
+        <div><div class="pay-name">Zelle</div><div class="pay-handle">your@email.com</div><div class="pay-amount" id="pamt4"></div></div>
+      </a>
+    </div>
+    <div class="btn-row" style="justify-content:center;">
+      <button class="btn btn-primary" onclick="confirmPayment()" id="confirmBtn">I've Sent Payment →</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: CONFIRMATION -->
+  <div class="step" id="step5">
+    <div class="confirm-box">
+      <div class="confirm-icon">🎉</div>
+      <h2>Order Placed!</h2>
+      <p>Thank you! We'll verify your payment and ship your V3RX piece within 3–5 business days.</p>
+      <p>A confirmation email has been sent to you. Save your Order ID to track your order.</p>
+      <div class="order-id-card">
+        <div><div class="oid-label">Your Order ID</div><div class="oid-val" id="finalOrderId"></div></div>
+        <button class="btn btn-ghost" onclick="copyOrderId()" style="padding:10px 16px;font-size:0.6rem;">Copy</button>
+      </div>
+      <a href="/track.html" class="btn btn-ghost" style="display:inline-block;">Track My Order →</a>
+      <div class="trust-row">
+        <div class="trust-item"><span class="trust-icon">📦</span><div class="trust-text"><strong>Ships in 3–5 Days</strong>We'll email you when it's out</div></div>
+        <div class="trust-item"><span class="trust-icon">✉️</span><div class="trust-text"><strong>Check Your Email</strong>Full receipt sent to you</div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .page -->
+
+<!-- CART BAR -->
+<div class="cart-bar" id="cartBar">
+  <div class="cart-info">
+    <strong id="cartName">—</strong> &nbsp;·&nbsp; Size: <strong id="cartSize">—</strong> &nbsp;·&nbsp; <strong id="cartPrice">$—</strong>
+  </div>
+  <button class="btn btn-primary" onclick="goToStep(2)">Continue →</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = ''; // Your Railway URL goes here
+
+const PRODUCTS = [
+  { id:'p1', name:'Void Oversized Tee', type:'Heavy Cotton / Unisex', price:58, sizes:['XS','S','M','L','XL','XXL'], emoji:'V3RX', bg:'linear-gradient(135deg,#111,#1a1a1a)', badge:'' },
+  { id:'p2', name:'Arc Hoodie', type:'French Terry / Relaxed', price:120, sizes:['S','M','L','XL','XXL'], emoji:'◆', bg:'linear-gradient(135deg,#0f0f0f,#181818)', badge:'LIMITED' },
+  { id:'p3', name:'Phantom Track Pant', type:'Nylon Blend / Tapered', price:95, sizes:['S','M','L','XL'], emoji:'01', bg:'linear-gradient(135deg,#131313,#1c1c1c)', badge:'' },
+  { id:'p4', name:'Signal Longsleeve', type:'Ribbed Knit / Slim', price:72, sizes:['XS','S','M','L','XL','XXL'], emoji:'∞', bg:'linear-gradient(135deg,#0d0d0d,#161616)', badge:'NEW' },
+  { id:'p5', name:'Recon Cap', type:'6-Panel / Structured', price:42, sizes:['ONE SIZE'], emoji:'V', bg:'linear-gradient(135deg,#161616,#202020)', badge:'LIMITED' },
+  { id:'p6', name:'Stealth Cargo', type:'Ripstop Cotton / Relaxed', price:110, sizes:['S','M','L','XL'], emoji:'▲', bg:'linear-gradient(135deg,#121212,#1b1b1b)', badge:'' },
+];
+
+let selectedProduct = null;
+let selectedSize = null;
+let customerData = {};
+let currentOrderId = null;
+
+// ── RENDER PRODUCTS ──────────────────────────────────────────────
+function renderProducts() {
+  document.getElementById('productsGrid').innerHTML = PRODUCTS.map(p => `
+    <div class="product-card reveal" id="card_${p.id}" onclick="selectProduct('${p.id}')">
+      <div class="product-img" style="background:${p.bg}">
+        ${p.emoji}
+        ${p.badge ? `<div class="product-badge">${p.badge}</div>` : ''}
+      </div>
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div class="product-type">${p.type}</div>
+        <div class="product-price">$${p.price}</div>
+        <div class="product-sizes">
+          ${p.sizes.map(s => `<button class="size-btn" id="sz_${p.id}_${s}" onclick="selectSize(event,'${p.id}','${s}')">${s}</button>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+  observeReveals();
+}
+
+function selectProduct(id) {
+  document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('card_' + id).classList.add('selected');
+  selectedProduct = PRODUCTS.find(p => p.id === id);
+  selectedSize = null;
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
+  updateCart();
+}
+
+function selectSize(e, pid, size) {
+  e.stopPropagation();
+  if (!selectedProduct || selectedProduct.id !== pid) selectProduct(pid);
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById(`sz_${pid}_${size}`).classList.add('selected');
+  selectedSize = size;
+  updateCart();
+}
+
+function updateCart() {
+  const bar = document.getElementById('cartBar');
+  if (selectedProduct) {
+    document.getElementById('cartName').textContent = selectedProduct.name;
+    document.getElementById('cartSize').textContent = selectedSize || 'pick a size';
+    document.getElementById('cartPrice').textContent = '$' + selectedProduct.price;
+    bar.classList.add('visible');
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+// ── STEPS ────────────────────────────────────────────────────────
+function goToStep(n) {
+  if (n === 2 && !selectedProduct) { showToast('Please select a product'); return; }
+  if (n === 2 && !selectedSize) { showToast('Please select a size'); return; }
+
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+
+  for (let i = 1; i <= 5; i++) {
+    const d = document.getElementById('dot' + i);
+    d.classList.remove('active','done');
+    if (i < n) d.classList.add('done');
+    else if (i === n) d.classList.add('active');
+  }
+
+  // Hide hero after step 1
+  document.getElementById('heroSection').style.display = n === 1 ? 'block' : 'none';
+
+  if (n === 2) renderSummary('summaryStep2');
+  if (n === 4) {
+    renderSummary('summaryStep4');
+    ['pamt1','pamt2','pamt3','pamt4'].forEach(id => document.getElementById(id).textContent = '$' + selectedProduct.price);
+  }
+
+  document.getElementById('cartBar').classList.remove('visible');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderSummary(id) {
+  document.getElementById(id).innerHTML = `
+    <div class="order-summary">
+      <div class="summary-title">Order Summary</div>
+      <div class="summary-row"><span>Item</span><span>${selectedProduct.name}</span></div>
+      <div class="summary-row"><span>Size</span><span>${selectedSize}</span></div>
+      <div class="summary-row"><span>Style</span><span>${selectedProduct.type}</span></div>
+      <div class="summary-row"><span>Total</span><span>$${selectedProduct.price}</span></div>
+    </div>
+  `;
+}
+
+// ── ADDRESS SUBMIT ────────────────────────────────────────────────
+async function submitAddress() {
+  const fields = { firstName: 'First Name', lastName: 'Last Name', emailInput: 'Email', address1: 'Address', city: 'City', state: 'State', zip: 'ZIP' };
+  for (const [id, name] of Object.entries(fields)) {
+    if (!document.getElementById(id).value.trim()) { showToast(`${name} is required`); return; }
+  }
+  const email = document.getElementById('emailInput').value.trim();
+  if (!/\S+@\S+\.\S+/.test(email)) { document.getElementById('emailError').classList.add('show'); return; }
+  document.getElementById('emailError').classList.remove('show');
+
+  customerData = {
+    firstName: document.getElementById('firstName').value.trim(),
+    lastName: document.getElementById('lastName').value.trim(),
+    email,
+    phone: document.getElementById('phoneInput').value.trim(),
+    address1: document.getElementById('address1').value.trim(),
+    address2: document.getElementById('address2').value.trim(),
+    city: document.getElementById('city').value.trim(),
+    state: document.getElementById('state').value.trim(),
+    zip: document.getElementById('zip').value.trim(),
+    country: document.getElementById('country').value,
+  };
+
+  const btn = document.getElementById('sendCodeBtn');
+  btn.innerHTML = '<span class="loader"></span>Sending...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/api/send-verification`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, firstName: customerData.firstName })
+    });
+    const data = await res.json();
+    if (data.success) {
+      // Dev mode: auto-fill code if returned
+      if (data.devCode) {
+        const digits = data.devCode.split('');
+        digits.forEach((d, i) => { const el = document.getElementById('d' + i); if (el) el.value = d; });
+        showToast('Dev mode: code auto-filled');
+      }
+      document.getElementById('emailDisplay').textContent = email;
+      goToStep(3);
+    } else {
+      showToast('Failed to send code. Try again.');
+    }
+  } catch (e) {
+    showToast('Server not connected yet. Check Railway setup.');
+  }
+
+  btn.innerHTML = 'Send Verification Code →';
+  btn.disabled = false;
+}
+
+// ── CODE INPUTS ───────────────────────────────────────────────────
+function digitInput(el, idx) {
+  el.value = el.value.replace(/\D/g, '');
+  if (el.value && idx < 5) document.getElementById('d' + (idx + 1)).focus();
+  // Auto-verify when all 6 digits entered
+  if (idx === 5 && el.value) {
+    const code = Array.from({length:6}, (_,i) => document.getElementById('d'+i).value).join('');
+    if (code.length === 6) verifyCode();
+  }
+}
+
+function digitBack(e, idx) {
+  if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+    document.getElementById('d' + (idx - 1)).focus();
+  }
+}
+
+// ── VERIFY CODE ───────────────────────────────────────────────────
+async function verifyCode() {
+  const code = Array.from({length:6}, (_,i) => document.getElementById('d'+i).value).join('');
+  if (code.length !== 6) { showToast('Enter all 6 digits'); return; }
+
+  const btn = document.getElementById('verifyBtn');
+  btn.innerHTML = '<span class="loader"></span>Verifying...';
+  btn.disabled = true;
+  document.getElementById('codeError').classList.remove('show');
+
+  try {
+    const res = await fetch(`${API}/api/verify-code`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: customerData.email, code })
+    });
+    const data = await res.json();
+    if (data.success) {
+      goToStep(4);
+    } else {
+      document.getElementById('codeError').classList.add('show');
+      // Shake the inputs
+      document.querySelector('.code-inputs').style.animation = 'none';
+      Array.from({length:6},(_,i) => { document.getElementById('d'+i).style.borderColor = '#ff5555'; });
+      setTimeout(() => Array.from({length:6},(_,i) => { document.getElementById('d'+i).style.borderColor = ''; }), 1500);
+    }
+  } catch (e) {
+    showToast('Server not connected yet.');
+  }
+
+  btn.innerHTML = 'Verify →';
+  btn.disabled = false;
+}
+
+async function resendCode() {
+  showToast('Code resent!');
+  try {
+    await fetch(`${API}/api/send-verification`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: customerData.email, firstName: customerData.firstName })
+    });
+  } catch(e) {}
+}
+
+// ── CONFIRM PAYMENT ───────────────────────────────────────────────
+async function confirmPayment() {
+  const btn = document.getElementById('confirmBtn');
+  btn.innerHTML = '<span class="loader"></span>Placing Order...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/api/create-order`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customer: customerData,
+        product: { id: selectedProduct.id, name: selectedProduct.name, size: selectedSize, price: selectedProduct.price }
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      currentOrderId = data.orderId;
+      document.getElementById('finalOrderId').textContent = currentOrderId;
+      goToStep(5);
+    } else { showToast('Something went wrong. DM us on TikTok.'); }
+  } catch (e) { showToast('Server not connected yet.'); }
+
+  btn.innerHTML = "I've Sent Payment →";
+  btn.disabled = false;
+}
+
+function copyOrderId() {
+  navigator.clipboard.writeText(currentOrderId);
+  showToast('Order ID copied!');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── SCROLL REVEAL ─────────────────────────────────────────────────
+function observeReveals() {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
+
+renderProducts();
+</script>
+</body>
+</html>
