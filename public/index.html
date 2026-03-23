@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>V3RX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;
+  --border:#2a2a2a;--border2:#333;
+  --text:#f0f0f0;--muted:#888;--muted2:#555;
+  --white:#fff;--accent:#d0d0d0;
+  --danger:#ff4444;--success:#00c896;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;}
+
+/* NAV */
+.top-nav{display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:56px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100;}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--white);cursor:pointer;}
+.nav-tabs{display:flex;gap:2px;}
+.nav-tab{padding:6px 16px;border:1px solid transparent;border-radius:4px;cursor:pointer;font-size:13px;color:var(--muted);background:none;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.nav-tab:hover{color:var(--text);border-color:var(--border2);}
+.nav-tab.active{color:var(--white);background:var(--bg3);border-color:var(--border2);}
+
+/* VIEWS */
+.view{display:none;min-height:calc(100vh - 56px);}
+.view.active{display:block;}
+
+/* ===== STOREFRONT ===== */
+.store-hero{padding:80px 2rem 60px;text-align:center;border-bottom:1px solid var(--border);background:var(--bg2);}
+.store-hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,10vw,110px);letter-spacing:8px;color:var(--white);line-height:1;}
+.store-hero p{color:var(--muted);margin-top:10px;font-size:12px;letter-spacing:3px;text-transform:uppercase;}
+.store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;background:var(--border);}
+.product-card{background:var(--bg);cursor:pointer;transition:background .15s;position:relative;}
+.product-card:hover{background:var(--bg2);}
+.product-img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;}
+.product-img-ph{width:100%;aspect-ratio:3/4;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:11px;letter-spacing:2px;}
+.product-info{padding:14px 16px 18px;}
+.product-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
+.tag{font-size:10px;font-weight:500;padding:2px 8px;border-radius:2px;letter-spacing:1px;text-transform:uppercase;}
+.tag-SALE{background:#ff4444;color:#fff;}
+.tag-NEW{background:#fff;color:#000;}
+.tag-HOT{background:#ff6a00;color:#fff;}
+.tag-LIMITED{background:#7b61ff;color:#fff;}
+.tag-EXCLUSIVE{background:#1a1a1a;color:#aaa;border:1px solid #444;}
+.tag-RESTOCK{background:#00c896;color:#000;}
+.tag-COLLAB{background:#f5c518;color:#000;}
+.tag-SOLD_OUT,.tag-SOLD\ OUT{background:#2a2a2a;color:#666;}
+.tag-TRENDING{background:#e040fb;color:#fff;}
+.product-name{font-size:15px;font-weight:500;color:var(--text);margin-bottom:4px;}
+.product-price{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.price-main{color:var(--white);font-weight:500;}
+.price-from{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);}
+.buy-btn{display:block;width:100%;margin-top:10px;padding:10px;background:var(--white);color:#000;border:none;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .15s;}
+.buy-btn:hover{background:#d0d0d0;}
+.buy-btn:disabled{background:var(--bg4);color:var(--muted2);cursor:default;}
+
+/* MODAL */
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:999;align-items:center;justify-content:center;padding:20px;}
+.modal-wrap.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);width:100%;max-width:720px;max-height:92vh;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;position:relative;}
+.modal-img-wrap{background:var(--bg3);aspect-ratio:1;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:11px;}
+.modal-img-wrap img{width:100%;height:100%;object-fit:cover;}
+.modal-body{padding:28px 24px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
+.modal-name{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--white);}
+.modal-price{font-size:24px;font-weight:300;color:var(--white);}
+.sec-label{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:5px;}
+.swatch-row{display:flex;gap:7px;flex-wrap:wrap;}
+.swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .1s;}
+.swatch.active{border-color:var(--white);}
+.size-row{display:flex;gap:6px;flex-wrap:wrap;}
+.size-chip{padding:6px 14px;border:1px solid var(--border2);font-size:12px;cursor:pointer;color:var(--muted);transition:all .1s;}
+.size-chip:hover,.size-chip.active{background:var(--white);color:#000;border-color:var(--white);}
+.modal-buy{margin-top:auto;padding:14px;background:var(--white);color:#000;border:none;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;width:100%;transition:background .15s;}
+.modal-buy:hover{background:#ccc;}
+.modal-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;z-index:10;line-height:1;}
+.modal-imgs-nav{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.modal-thumb{width:44px;height:44px;object-fit:cover;cursor:pointer;border:1px solid transparent;opacity:.6;transition:all .1s;}
+.modal-thumb.active,.modal-thumb:hover{border-color:var(--white);opacity:1;}
+
+/* ===== ADMIN ===== */
+.admin-wrap{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 56px);}
+.admin-sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:20px 0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;}
+.sb-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);padding:0 20px 8px;margin-top:8px;}
+.sb-item{padding:10px 20px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);transition:all .1s;border-left:2px solid transparent;}
+.sb-item:hover{color:var(--text);background:var(--bg3);}
+.sb-item.active{color:var(--white);background:var(--bg3);border-left-color:var(--white);}
+.admin-main{padding:28px 32px;overflow-y:auto;background:var(--bg);}
+.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.admin-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--white);}
+
+/* BUTTONS */
+.btn-primary{padding:9px 20px;background:var(--white);color:#000;border:none;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .15s;}
+.btn-primary:hover{background:#ccc;}
+.btn-primary:disabled{background:var(--bg4);color:var(--muted2);cursor:default;}
+.btn-ghost{padding:8px 16px;background:none;border:1px solid var(--border2);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .1s;}
+.btn-ghost:hover{border-color:var(--accent);color:var(--text);}
+.btn-danger{padding:8px 16px;background:none;border:1px solid #551111;color:#ff6b6b;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:background .15s;}
+.btn-danger:hover{background:#1a0808;}
+
+/* FORMS */
+.form-card{background:var(--bg2);border:1px solid var(--border);padding:24px;margin-bottom:20px;}
+.form-card-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:18px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.form-row.full{grid-template-columns:1fr;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.form-input,.form-select,.form-textarea{background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .1s;width:100%;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--muted2);}
+.form-textarea{resize:vertical;min-height:80px;}
+
+/* TAGS */
+.tags-grid{display:flex;gap:8px;flex-wrap:wrap;}
+.tag-toggle{padding:5px 12px;border:1px solid var(--border2);font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;background:none;color:var(--muted);transition:all .1s;border-radius:2px;font-family:'DM Sans',sans-serif;}
+.tag-toggle.on{color:#fff;}
+.tag-toggle.on.t-SALE{background:#ff4444;border-color:#ff4444;}
+.tag-toggle.on.t-NEW{background:#fff;color:#000;border-color:#fff;}
+.tag-toggle.on.t-HOT{background:#ff6a00;border-color:#ff6a00;}
+.tag-toggle.on.t-LIMITED{background:#7b61ff;border-color:#7b61ff;}
+.tag-toggle.on.t-EXCLUSIVE{background:#444;border-color:#888;}
+.tag-toggle.on.t-RESTOCK{background:#00c896;color:#000;border-color:#00c896;}
+.tag-toggle.on.t-COLLAB{background:#f5c518;color:#000;border-color:#f5c518;}
+.tag-toggle.on.t-SOLD_OUT{background:#333;border-color:#555;color:#999;}
+.tag-toggle.on.t-TRENDING{background:#e040fb;border-color:#e040fb;}
+
+/* SIZES */
+.sizes-grid{display:flex;gap:6px;flex-wrap:wrap;}
+.size-toggle{padding:6px 14px;border:1px solid var(--border2);font-size:12px;cursor:pointer;background:none;color:var(--muted);font-family:'DM Sans',sans-serif;transition:all .1s;}
+.size-toggle.active{background:var(--white);color:#000;border-color:var(--white);}
+
+/* VARIANTS */
+.variant-row{display:grid;grid-template-columns:1fr 120px 40px 36px;gap:8px;align-items:center;margin-bottom:8px;}
+.color-pick{width:36px;height:36px;border:1px solid var(--border2);background:none;cursor:pointer;padding:2px;}
+.remove-btn{width:32px;height:32px;background:none;border:1px solid #551111;color:#ff6b6b;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;line-height:1;}
+.add-link{background:none;border:none;color:var(--muted);font-size:12px;letter-spacing:1px;cursor:pointer;padding:6px 0;text-transform:uppercase;font-family:'DM Sans',sans-serif;}
+.add-link:hover{color:var(--text);}
+
+/* IMAGE UPLOAD */
+.img-drop{border:1px dashed var(--border2);padding:30px;text-align:center;cursor:pointer;transition:border-color .15s;position:relative;}
+.img-drop:hover{border-color:var(--accent);}
+.img-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.img-drop p{color:var(--muted);font-size:13px;}
+.img-drop small{color:var(--muted2);font-size:11px;}
+.img-previews{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.img-pw{position:relative;width:80px;height:80px;}
+.img-pw img{width:80px;height:80px;object-fit:cover;border:1px solid var(--border);}
+.img-pw button{position:absolute;top:-6px;right:-6px;width:18px;height:18px;background:#ff4444;border:none;color:#fff;border-radius:50%;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;}
+.url-row{display:flex;gap:8px;margin-top:10px;}
+.url-row .form-input{flex:1;}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
+.data-table td{padding:14px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.data-table tr:hover td{background:var(--bg2);}
+.prod-thumb{width:44px;height:44px;object-fit:cover;background:var(--bg3);display:block;}
+.prod-thumb-ph{width:44px;height:44px;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:9px;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);padding:18px 20px;}
+.stat-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-bottom:6px;}
+.stat-val{font-size:28px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--white);}
+
+/* ALERTS */
+.alert{padding:10px 16px;margin-bottom:16px;font-size:13px;border-radius:2px;}
+.alert-ok{background:#0a2018;border:1px solid #1a5c38;color:#4dcc8a;}
+.alert-err{background:#1a0808;border:1px solid #551111;color:#ff6b6b;}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted2);}
+.empty-state p{font-size:13px;margin-top:8px;}
+
+/* LOGIN */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 56px);}
+.login-box{background:var(--bg2);border:1px solid var(--border);padding:40px;width:100%;max-width:360px;}
+.login-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;margin-bottom:24px;color:var(--white);}
+
+/* LOADER */
+.loader{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--muted);font-size:12px;letter-spacing:2px;}
+
+@media(max-width:720px){
+  .admin-wrap{grid-template-columns:1fr;}
+  .admin-sidebar{display:none;}
+  .modal{grid-template-columns:1fr;}
+  .form-row{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .variant-row{grid-template-columns:1fr 100px 36px 32px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-logo" id="navLogo">V3RX</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showView('store')">Store</button>
+    <button class="nav-tab" onclick="showView('admin')">Admin</button>
+  </div>
+</nav>
+
+<!-- ===== STORE VIEW ===== -->
+<div class="view active" id="view-store">
+  <div class="store-hero">
+    <h1 id="heroName">V3RX</h1>
+    <p id="heroTagline">Premium Streetwear</p>
+  </div>
+  <div id="storeGrid" class="store-grid"></div>
+  <div id="storeEmpty" class="empty-state" style="display:none;">
+    <div style="font-size:32px;color:var(--muted2)">✦</div>
+    <p>No products yet. New drops coming soon.</p>
+  </div>
+  <div id="storeLoader" class="loader">LOADING...</div>
+</div>
+
+<!-- ===== ADMIN VIEW ===== -->
+<div class="view" id="view-admin">
+  <!-- Login -->
+  <div class="login-wrap" id="adminLogin">
+    <div class="login-box">
+      <div class="login-title">ADMIN ACCESS</div>
+      <div id="loginAlert"></div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="adminPass" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="btn-primary" style="width:100%" onclick="doLogin()">ENTER</button>
+      <p style="font-size:11px;color:var(--muted2);margin-top:12px;">Default: admin123</p>
+    </div>
+  </div>
+
+  <!-- Panel -->
+  <div id="adminPanel" style="display:none;">
+    <div class="admin-wrap">
+      <aside class="admin-sidebar">
+        <div class="sb-label">Manage</div>
+        <div class="sb-item active" data-sec="dashboard" onclick="adminSection('dashboard')">Dashboard</div>
+        <div class="sb-item" data-sec="products" onclick="adminSection('products')">All Products</div>
+        <div class="sb-item" data-sec="addProduct" onclick="startAddProduct()">Add Product</div>
+        <div class="sb-label">Store</div>
+        <div class="sb-item" data-sec="settings" onclick="adminSection('settings')">Settings</div>
+        <div class="sb-label" style="margin-top:auto;"></div>
+        <div class="sb-item" onclick="doLogout()" style="margin-top:16px;">Log Out</div>
+      </aside>
+      <main class="admin-main" id="adminMain">
+        <div class="loader">LOADING...</div>
+      </main>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PRODUCT MODAL ===== -->
+<div class="modal-wrap" id="productModal">
+  <div class="modal" id="modalInner"></div>
+</div>
+
+<script>
+// ==============================
+// API HELPERS
+// ==============================
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch('/api' + path, opts);
+  return r.json();
+}
+
+// ==============================
+// VIEWS
+// ==============================
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach((t, i) =>
+    t.classList.toggle('active', (v === 'store' && i === 0) || (v === 'admin' && i === 1))
+  );
+  if (v === 'store') loadStore();
+  if (v === 'admin') checkAuth();
+}
+
+// ==============================
+// AUTH
+// ==============================
+async function checkAuth() {
+  const data = await api('GET', '/auth/check');
+  if (data.authenticated) {
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    adminSection('dashboard');
+  } else {
+    document.getElementById('adminLogin').style.display = 'flex';
+    document.getElementById('adminPanel').style.display = 'none';
+  }
+}
+
+async function doLogin() {
+  const password = document.getElementById('adminPass').value;
+  const data = await api('POST', '/auth/login', { password });
+  if (data.ok) {
+    document.getElementById('loginAlert').innerHTML = '';
+    checkAuth();
+  } else {
+    document.getElementById('loginAlert').innerHTML = '<div class="alert alert-err">Incorrect password</div>';
+  }
+}
+
+async function doLogout() {
+  await api('POST', '/auth/logout');
+  document.getElementById('adminPanel').style.display = 'none';
+  document.getElementById('adminLogin').style.display = 'flex';
+  document.getElementById('adminPass').value = '';
+  showView('store');
+}
+
+// ==============================
+// STORE
+// ==============================
+async function loadStore() {
+  document.getElementById('storeLoader').style.display = 'flex';
+  document.getElementById('storeGrid').innerHTML = '';
+  document.getElementById('storeEmpty').style.display = 'none';
+
+  const [products, settings] = await Promise.all([
+    api('GET', '/products'),
+    api('GET', '/settings')
+  ]);
+
+  document.getElementById('navLogo').textContent = settings.store_name || 'V3RX';
+  document.getElementById('heroName').textContent = settings.store_name || 'V3RX';
+  document.getElementById('heroTagline').textContent = settings.store_tagline || 'Premium Streetwear';
+  document.getElementById('storeLoader').style.display = 'none';
+
+  if (!products.length) {
+    document.getElementById('storeEmpty').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('storeGrid').innerHTML = products.map(p => `
+    <div class="product-card" onclick="openModal('${p.id}')">
+      ${p.images[0]
+        ? `<img class="product-img" src="${p.images[0]}" loading="lazy" onerror="this.outerHTML='<div class=product-img-ph>NO IMAGE</div>'">`
+        : `<div class="product-img-ph">NO IMAGE</div>`}
+      <div class="product-info">
+        ${p.tags.length ? `<div class="product-tags">${p.tags.slice(0,3).map(t => `<span class="tag tag-${t.replace(/\s/g,'_')}">${t}</span>`).join('')}</div>` : ''}
+        <div class="product-name">${escHtml(p.name)}</div>
+        <div class="product-price">
+          <span class="price-from">from</span>
+          <span class="price-main">$${parseFloat(p.price).toFixed(2)}</span>
+        </div>
+        ${p.tags.includes('SOLD OUT')
+          ? `<button class="buy-btn" disabled>SOLD OUT</button>`
+          : p.buy_link
+            ? `<button class="buy-btn" onclick="event.stopPropagation();window.open('${escAttr(p.buy_link)}','_blank')">BUY NOW</button>`
+            : `<button class="buy-btn" onclick="event.stopPropagation();openModal('${p.id}')">VIEW PRODUCT</button>`}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ==============================
+// PRODUCT MODAL
+// ==============================
+let _modalProducts = [];
+
+async function openModal(id) {
+  if (!_modalProducts.length) _modalProducts = await api('GET', '/products') || [];
+  const p = _modalProducts.find(x => x.id === id);
+  if (!p) return;
+
+  let selImg = p.images[0] || '';
+  let selVariantIdx = 0;
+
+  function getPrice() {
+    const v = p.variants[selVariantIdx];
+    return v && v.price ? '$' + parseFloat(v.price).toFixed(2) : '$' + parseFloat(p.price).toFixed(2);
+  }
+
+  function render() {
+    document.getElementById('modalInner').innerHTML = `
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-img-wrap" id="modalImgWrap">
+        ${selImg ? `<img src="${escAttr(selImg)}" id="mainModalImg">` : 'NO IMAGE'}
+      </div>
+      <div class="modal-body">
+        ${p.tags.length ? `<div class="product-tags">${p.tags.map(t => `<span class="tag tag-${t.replace(/\s/g,'_')}">${t}</span>`).join('')}</div>` : ''}
+        <div class="modal-name">${escHtml(p.name)}</div>
+        <div class="modal-price" id="mPrice">${getPrice()}</div>
+        ${p.description ? `<p style="font-size:13px;color:var(--muted)">${escHtml(p.description)}</p>` : ''}
+        ${p.variants.length ? `
+          <div>
+            <div class="sec-label">Color</div>
+            <div class="swatch-row">
+              ${p.variants.map((v,i) => `<div class="swatch ${i===0?'active':''}" id="sw${i}" title="${escAttr(v.name)}" style="background:${escAttr(v.hex||'#888')}" onclick="selectVariant(${i})"></div>`).join('')}
+            </div>
+            <div id="varName" style="font-size:12px;color:var(--muted);margin-top:4px;">${p.variants[0]?.name||''}</div>
+          </div>` : ''}
+        ${p.sizes.length ? `
+          <div>
+            <div class="sec-label">Size</div>
+            <div class="size-row">
+              ${p.sizes.map((s,i) => `<div class="size-chip ${i===0?'active':''}" id="szc-${escAttr(s)}" onclick="selectSize('${escAttr(s)}')">${escHtml(s)}</div>`).join('')}
+            </div>
+          </div>` : ''}
+        ${p.images.length > 1 ? `
+          <div class="modal-imgs-nav">
+            ${p.images.map((img,i) => `<img class="modal-thumb ${i===0?'active':''}" src="${escAttr(img)}" id="mthumb${i}" onclick="selectImg(${i},'${escAttr(img)}')">`).join('')}
+          </div>` : ''}
+        ${p.tags.includes('SOLD OUT')
+          ? `<button class="modal-buy" disabled style="background:var(--bg4);color:var(--muted2)">SOLD OUT</button>`
+          : p.buy_link
+            ? `<button class="modal-buy" onclick="window.open('${escAttr(p.buy_link)}','_blank')">BUY NOW — <span id="bPrice">${getPrice()}</span></button>`
+            : `<button class="modal-buy" disabled style="background:var(--bg4);color:var(--muted2)">UNAVAILABLE</button>`}
+      </div>
+    `;
+
+    window.selectVariant = (i) => {
+      selVariantIdx = i;
+      document.querySelectorAll('.swatch').forEach((el, j) => el.classList.toggle('active', j === i));
+      const vn = document.getElementById('varName');
+      if (vn) vn.textContent = p.variants[i]?.name || '';
+      const pr = getPrice();
+      const mp = document.getElementById('mPrice'), bp = document.getElementById('bPrice');
+      if (mp) mp.textContent = pr;
+      if (bp) bp.textContent = pr;
+    };
+    window.selectSize = (s) => {
+      document.querySelectorAll('.size-chip').forEach(el => el.classList.toggle('active', el.id === 'szc-' + s));
+    };
+    window.selectImg = (i, src) => {
+      selImg = src;
+      const mi = document.getElementById('mainModalImg');
+      if (mi) mi.src = src;
+      document.querySelectorAll('.modal-thumb').forEach((el, j) => el.classList.toggle('active', j === i));
+    };
+  }
+
+  render();
+  document.getElementById('productModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('productModal').classList.remove('open');
+}
+document.getElementById('productModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ==============================
+// ADMIN SECTIONS
+// ==============================
+function adminSection(sec) {
+  document.querySelectorAll('.sb-item[data-sec]').forEach(el =>
+    el.classList.toggle('active', el.dataset.sec === sec)
+  );
+  const main = document.getElementById('adminMain');
+  main.innerHTML = '<div class="loader">LOADING...</div>';
+  if (sec === 'dashboard') renderDashboard();
+  else if (sec === 'products') renderProductList();
+  else if (sec === 'settings') renderSettings();
+}
+
+// ---- DASHBOARD ----
+async function renderDashboard() {
+  const products = await api('GET', '/products');
+  const main = document.getElementById('adminMain');
+  const total = products.length;
+  const onSale = products.filter(p => p.tags.includes('SALE')).length;
+  const soldOut = products.filter(p => p.tags.includes('SOLD OUT')).length;
+  const prices = products.map(p => parseFloat(p.price) || 0);
+  const avg = prices.length ? (prices.reduce((a,b)=>a+b,0)/prices.length).toFixed(2) : '0.00';
+
+  main.innerHTML = `
+    <div class="admin-header"><div class="admin-title">DASHBOARD</div></div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">Total Products</div><div class="stat-val">${total}</div></div>
+      <div class="stat-card"><div class="stat-label">On Sale</div><div class="stat-val">${onSale}</div></div>
+      <div class="stat-card"><div class="stat-label">Sold Out</div><div class="stat-val">${soldOut}</div></div>
+      <div class="stat-card"><div class="stat-label">Avg Price</div><div class="stat-val">$${avg}</div></div>
+    </div>
+    <div class="admin-header">
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Recent Drops</div>
+      <button class="btn-primary" onclick="startAddProduct()">+ ADD PRODUCT</button>
+    </div>
+    ${!products.length ? '<div class="empty-state"><p>No products yet.</p></div>' : `
+    <table class="data-table"><thead><tr><th></th><th>Name</th><th>Price</th><th>Tags</th><th></th></tr></thead><tbody>
+      ${products.slice(0,8).map(p=>`<tr>
+        <td>${p.images[0]?`<img class="prod-thumb" src="${escAttr(p.images[0])}">` : '<div class="prod-thumb-ph">IMG</div>'}</td>
+        <td style="color:var(--text);font-weight:500">${escHtml(p.name)}</td>
+        <td style="color:var(--muted)">$${parseFloat(p.price).toFixed(2)}</td>
+        <td>${p.tags.slice(0,2).map(t=>`<span class="tag tag-${t.replace(/\s/g,'_')}">${t}</span>`).join(' ')}</td>
+        <td><button class="btn-ghost" onclick="startEditProduct('${p.id}')">Edit</button></td>
+      </tr>`).join('')}
+    </tbody></table>`}
+  `;
+}
+
+// ---- PRODUCT LIST ----
+async function renderProductList() {
+  const products = await api('GET', '/products');
+  const main = document.getElementById('adminMain');
+  main.innerHTML = `
+    <div class="admin-header">
+      <div class="admin-title">ALL PRODUCTS</div>
+      <button class="btn-primary" onclick="startAddProduct()">+ ADD PRODUCT</button>
+    </div>
+    ${!products.length ? '<div class="empty-state"><p>No products yet.</p></div>' : `
+    <table class="data-table"><thead><tr><th></th><th>Name</th><th>Price</th><th>Tags</th><th>Sizes</th><th>Actions</th></tr></thead><tbody>
+      ${products.map(p=>`<tr>
+        <td>${p.images[0]?`<img class="prod-thumb" src="${escAttr(p.images[0])}">` : '<div class="prod-thumb-ph">IMG</div>'}</td>
+        <td style="color:var(--text);font-weight:500">${escHtml(p.name)}</td>
+        <td style="color:var(--muted)">$${parseFloat(p.price).toFixed(2)}</td>
+        <td>${p.tags.map(t=>`<span class="tag tag-${t.replace(/\s/g,'_')}">${t}</span>`).join(' ')}</td>
+        <td style="color:var(--muted);font-size:12px">${p.sizes.join(', ')||'—'}</td>
+        <td style="display:flex;gap:6px">
+          <button class="btn-ghost" onclick="startEditProduct('${p.id}')">Edit</button>
+          <button class="btn-danger" onclick="deleteProduct('${p.id}')">Delete</button>
+        </td>
+      </tr>`).join('')}
+    </tbody></table>`}
+  `;
+}
+
+// ---- PRODUCT FORM ----
+let _editId = null;
+let _formImages = [];
+let _formTags = [];
+let _formSizes = [];
+let _formVariants = [];
+const ALL_TAGS = ['NEW','HOT','SALE','LIMITED','EXCLUSIVE','RESTOCK','COLLAB','SOLD OUT','TRENDING'];
+const DEFAULT_SIZES = ['XS','S','M','L','XL','XXL'];
+
+function startAddProduct() {
+  _editId = null; _formImages = []; _formTags = []; _formSizes = []; _formVariants = [];
+  document.querySelectorAll('.sb-item[data-sec]').forEach(el => el.classList.toggle('active', el.dataset.sec === 'addProduct'));
+  renderProductForm(null);
+}
+async function startEditProduct(id) {
+  const p = await api('GET', '/products/' + id);
+  _editId = id; _formImages = [...p.images]; _formTags = [...p.tags]; _formSizes = [...p.sizes]; _formVariants = JSON.parse(JSON.stringify(p.variants));
+  document.querySelectorAll('.sb-item[data-sec]').forEach(el => el.classList.toggle('active', el.dataset.sec === 'addProduct'));
+  renderProductForm(p);
+}
+
+function renderProductForm(p) {
+  const main = document.getElementById('adminMain');
+  main.innerHTML = `
+    <div class="admin-header">
+      <div class="admin-title">${_editId ? 'EDIT PRODUCT' : 'ADD PRODUCT'}</div>
+      ${_editId ? `<button class="btn-danger" onclick="deleteProduct('${_editId}')">Delete</button>` : ''}
+    </div>
+    <div id="formAlert"></div>
+
+    <div class="form-card">
+      <div class="form-card-title">Product Info</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Product Name</label>
+          <input class="form-input" id="f-name" placeholder="e.g. Shadow Hoodie" value="${escHtml(p?.name||'')}"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Base Price ($)</label>
+          <input class="form-input" id="f-price" type="number" step="0.01" placeholder="0.00" value="${p?.price||''}"/>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="f-desc" placeholder="Short product description...">${escHtml(p?.description||'')}</textarea>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label class="form-label">Buy Now Link (Checkout URL)</label>
+          <input class="form-input" id="f-link" placeholder="https://your-checkout-link.com/..." value="${escHtml(p?.buy_link||'')}"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title">Tags</div>
+      <div class="tags-grid">
+        ${ALL_TAGS.map(t=>`<button class="tag-toggle t-${t.replace(/\s/g,'_')} ${_formTags.includes(t)?'on':''}" onclick="toggleTag('${t}')" data-tag="${t}">${t}</button>`).join('')}
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title">Sizes</div>
+      <div class="sizes-grid" id="sizesGrid">
+        ${DEFAULT_SIZES.map(s=>`<button class="size-toggle ${_formSizes.includes(s)?'active':''}" data-sz="${s}" onclick="toggleSize('${s}')">${s}</button>`).join('')}
+      </div>
+      <div class="url-row" style="margin-top:12px">
+        <input class="form-input" id="customSzIn" placeholder="Custom size (e.g. 3XL)"/>
+        <button class="btn-ghost" onclick="addCustomSize()">+ Add</button>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title">Color Variants</div>
+      <div id="variantsWrap"></div>
+      <button class="add-link" onclick="addVariant()">+ Add Color Variant</button>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title">Images</div>
+      <div class="img-drop">
+        <input type="file" accept="image/*" multiple onchange="handleUpload(event)"/>
+        <p>Drop images here or click to upload from desktop</p>
+        <small>JPG · PNG · WEBP — max 10MB each</small>
+      </div>
+      <div class="url-row">
+        <input class="form-input" id="imgURL" placeholder="Or paste image URL"/>
+        <button class="btn-ghost" onclick="addImgURL()">+ Add</button>
+      </div>
+      <div class="img-previews" id="imgPreviews"></div>
+    </div>
+
+    <div style="display:flex;gap:12px;padding:4px 0 40px">
+      <button class="btn-primary" id="saveBtn" onclick="saveProduct()">${_editId?'SAVE CHANGES':'PUBLISH PRODUCT'}</button>
+      <button class="btn-ghost" onclick="adminSection('products')">Cancel</button>
+    </div>
+  `;
+  renderVariants();
+  renderImgPreviews();
+}
+
+function toggleTag(t) {
+  const idx = _formTags.indexOf(t);
+  if (idx > -1) _formTags.splice(idx, 1); else _formTags.push(t);
+  document.querySelectorAll('.tag-toggle').forEach(el => {
+    if (el.dataset.tag === t) el.classList.toggle('on', _formTags.includes(t));
+  });
+}
+function toggleSize(s) {
+  const idx = _formSizes.indexOf(s);
+  if (idx > -1) _formSizes.splice(idx, 1); else _formSizes.push(s);
+  document.querySelectorAll('.size-toggle').forEach(el => {
+    if (el.dataset.sz === s) el.classList.toggle('active', _formSizes.includes(s));
+  });
+}
+function addCustomSize() {
+  const inp = document.getElementById('customSzIn');
+  const s = inp.value.trim().toUpperCase();
+  if (!s || _formSizes.includes(s)) { inp.value=''; return; }
+  _formSizes.push(s);
+  inp.value = '';
+  const grid = document.getElementById('sizesGrid');
+  const btn = document.createElement('button');
+  btn.className = 'size-toggle active'; btn.dataset.sz = s; btn.textContent = s;
+  btn.onclick = () => toggleSize(s);
+  grid.appendChild(btn);
+}
+
+function renderVariants() {
+  const wrap = document.getElementById('variantsWrap');
+  if (!wrap) return;
+  wrap.innerHTML = _formVariants.map((v,i) => `
+    <div class="variant-row">
+      <input class="form-input" placeholder="Color Name" value="${escHtml(v.name||'')}" oninput="_formVariants[${i}].name=this.value"/>
+      <input class="form-input" placeholder="Price (optional)" type="number" step="0.01" value="${v.price||''}" oninput="_formVariants[${i}].price=this.value"/>
+      <input type="color" class="color-pick" value="${v.hex||'#888888'}" oninput="_formVariants[${i}].hex=this.value"/>
+      <button class="remove-btn" onclick="removeVariant(${i})">✕</button>
+    </div>
+  `).join('');
+}
+function addVariant() { _formVariants.push({name:'',price:'',hex:'#888888'}); renderVariants(); }
+function removeVariant(i) { _formVariants.splice(i,1); renderVariants(); }
+
+async function handleUpload(e) {
+  const files = [...e.target.files];
+  const fd = new FormData();
+  files.forEach(f => fd.append('images', f));
+  const r = await fetch('/api/upload', { method: 'POST', body: fd });
+  const data = await r.json();
+  if (data.urls) { _formImages.push(...data.urls); renderImgPreviews(); }
+}
+function addImgURL() {
+  const inp = document.getElementById('imgURL');
+  const url = inp.value.trim();
+  if (!url) return;
+  _formImages.push(url); inp.value = ''; renderImgPreviews();
+}
+function removeImg(i) { _formImages.splice(i,1); renderImgPreviews(); }
+function renderImgPreviews() {
+  const el = document.getElementById('imgPreviews');
+  if (!el) return;
+  el.innerHTML = _formImages.map((src,i) => `
+    <div class="img-pw">
+      <img src="${escAttr(src)}" onerror="this.style.opacity='.3'"/>
+      <button onclick="removeImg(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+async function saveProduct() {
+  const name = document.getElementById('f-name').value.trim();
+  const price = document.getElementById('f-price').value.trim();
+  const description = document.getElementById('f-desc').value.trim();
+  const buy_link = document.getElementById('f-link').value.trim();
+  const fa = document.getElementById('formAlert');
+
+  if (!name) { fa.innerHTML='<div class="alert alert-err">Product name is required.</div>'; return; }
+  if (!price) { fa.innerHTML='<div class="alert alert-err">Price is required.</div>'; return; }
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'SAVING...';
+
+  const body = { name, price: parseFloat(price), description, buy_link, tags: _formTags, sizes: _formSizes, variants: _formVariants, images: _formImages };
+  const data = _editId
+    ? await api('PUT', '/products/' + _editId, body)
+    : await api('POST', '/products', body);
+
+  btn.disabled = false; btn.textContent = _editId ? 'SAVE CHANGES' : 'PUBLISH PRODUCT';
+
+  if (data.error) {
+    fa.innerHTML = `<div class="alert alert-err">${data.error}</div>`;
+  } else {
+    fa.innerHTML = `<div class="alert alert-ok">${_editId ? 'Product updated!' : 'Product published!'}</div>`;
+    _modalProducts = []; // invalidate cache
+    setTimeout(() => adminSection('products'), 900);
+  }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Delete this product? This cannot be undone.')) return;
+  await api('DELETE', '/products/' + id);
+  _modalProducts = [];
+  adminSection('products');
+}
+
+// ---- SETTINGS ----
+async function renderSettings() {
+  const settings = await api('GET', '/settings');
+  const main = document.getElementById('adminMain');
+  main.innerHTML = `
+    <div class="admin-header"><div class="admin-title">SETTINGS</div></div>
+    <div class="form-card">
+      <div class="form-card-title">Store Identity</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Store Name</label>
+          <input class="form-input" id="s-name" value="${escHtml(settings.store_name||'V3RX')}"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tagline</label>
+          <input class="form-input" id="s-tag" value="${escHtml(settings.store_tagline||'Premium Streetwear')}"/>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="saveSettings()">SAVE</button>
+    </div>
+    <div class="form-card">
+      <div class="form-card-title">Security</div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label class="form-label">New Admin Password</label>
+          <input class="form-input" id="s-pass" type="password" placeholder="Leave blank to keep current"/>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="saveSettings()">UPDATE PASSWORD</button>
+    </div>
+    <div id="settingsAlert"></div>
+  `;
+}
+async function saveSettings() {
+  const body = {};
+  const n = document.getElementById('s-name');
+  const t = document.getElementById('s-tag');
+  const p = document.getElementById('s-pass');
+  if (n) body.store_name = n.value.trim();
+  if (t) body.store_tagline = t.value.trim();
+  if (p && p.value.trim()) body.admin_password = p.value.trim();
+  const data = await api('PUT', '/settings', body);
+  const el = document.getElementById('settingsAlert');
+  if (el) el.innerHTML = data.ok ? '<div class="alert alert-ok">Settings saved!</div>' : '<div class="alert alert-err">Error saving.</div>';
+  if (n) document.getElementById('navLogo').textContent = n.value || 'V3RX';
+}
+
+// ==============================
+// UTILS
+// ==============================
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// ---- INIT ----
+loadStore();
+</script>
+</body>
+</html>
