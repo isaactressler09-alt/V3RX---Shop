@@ -54,7 +54,7 @@ async function getDb() {
 
   _db.run(`INSERT OR IGNORE INTO settings (key,value) VALUES ('store_name','V3RX')`);
   _db.run(`INSERT OR IGNORE INTO settings (key,value) VALUES ('store_tagline','Premium Streetwear')`);
-  _db.run(`INSERT OR IGNORE INTO settings (key,value) VALUES ('admin_password','admin123')`);
+  _db.run(`INSERT OR IGNORE INTO settings (key,value) VALUES ('admin_password','Fortnite2273!')`);
 
   saveDb();
   console.log('[DB] Ready');
