@@ -5,6 +5,9 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust Railway's proxy so secure cookies work over HTTPS
+app.set('trust proxy', 1);
+
 // ---- Middleware ----
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
@@ -14,8 +17,9 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 // 24 hours
+    maxAge: 1000 * 60 * 60 * 24
   }
 }));
 
@@ -28,12 +32,11 @@ app.use('/uploads', express.static(
 // ---- API Routes ----
 app.use('/api', require('./routes/api'));
 
-// ---- SPA fallback (serve index.html for all non-API routes) ----
+// ---- SPA fallback ----
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ---- Start ----
 app.listen(PORT, () => {
   console.log(`V3RX server running on port ${PORT}`);
 });
