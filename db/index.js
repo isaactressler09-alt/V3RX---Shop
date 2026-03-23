@@ -7,6 +7,8 @@ const DB_FILE = path.join(DB_DIR, 'v3rx.db');
 
 if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
 
+console.log(`[DB] Storage path: ${DB_FILE}`);
+
 let _db = null;
 
 function saveDb() {
@@ -16,26 +18,46 @@ function saveDb() {
 
 async function getDb() {
   if (_db) return _db;
+
   const SQL = await initSqlJs();
-  _db = fs.existsSync(DB_FILE)
-    ? new SQL.Database(fs.readFileSync(DB_FILE))
-    : new SQL.Database();
+
+  if (fs.existsSync(DB_FILE)) {
+    console.log('[DB] Loading existing database from disk');
+    _db = new SQL.Database(fs.readFileSync(DB_FILE));
+  } else {
+    console.log('[DB] No database found, creating new one');
+    _db = new SQL.Database();
+  }
 
   _db.run(`
-    CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+  `);
+
+  _db.run(`
     CREATE TABLE IF NOT EXISTS products (
-      id TEXT PRIMARY KEY, name TEXT NOT NULL, price REAL NOT NULL,
-      description TEXT DEFAULT '', buy_link TEXT DEFAULT '',
-      tags TEXT DEFAULT '[]', sizes TEXT DEFAULT '[]',
-      variants TEXT DEFAULT '[]', images TEXT DEFAULT '[]',
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      price REAL NOT NULL,
+      description TEXT DEFAULT '',
+      buy_link TEXT DEFAULT '',
+      tags TEXT DEFAULT '[]',
+      sizes TEXT DEFAULT '[]',
+      variants TEXT DEFAULT '[]',
+      images TEXT DEFAULT '[]',
       created_at INTEGER DEFAULT (strftime('%s','now')),
       updated_at INTEGER DEFAULT (strftime('%s','now'))
     );
   `);
+
   _db.run(`INSERT OR IGNORE INTO settings (key,value) VALUES ('store_name','V3RX')`);
   _db.run(`INSERT OR IGNORE INTO settings (key,value) VALUES ('store_tagline','Premium Streetwear')`);
   _db.run(`INSERT OR IGNORE INTO settings (key,value) VALUES ('admin_password','admin123')`);
+
   saveDb();
+  console.log('[DB] Ready');
   return _db;
 }
 
@@ -54,7 +76,11 @@ function queryOne(db, sql, params = []) {
 
 function run(db, sql, params = []) {
   db.run(sql, params);
-  saveDb();
+  saveDb(); // always flush to disk after every write
 }
+
+// Graceful shutdown — flush on exit
+process.on('SIGTERM', () => { if (_db) saveDb(); process.exit(0); });
+process.on('SIGINT',  () => { if (_db) saveDb(); process.exit(0); });
 
 module.exports = { getDb, queryAll, queryOne, run, saveDb };
